@@ -6,8 +6,6 @@
 #include <time.h>
 #include <wchar.h>
 
-// for information, see: https://en.wikipedia.org/wiki/ANSI_escape_code
-
 #define RESOLUTION_12_28_UNIT 1
 #define RESOLUTION_180_420_SUGGESTED 15
 #define FPS_15 15
@@ -43,11 +41,11 @@ Viewport *vp_alloc(uint8_t size, uint8_t fps) {
     setlocale(LC_CTYPE, "");
 
     Viewport *vp;
-    vp = malloc(sizeof(Viewport));
+    vp = (Viewport *) malloc(sizeof(Viewport));
     vp->height = size * PIXEL_CLUSTER_DIM * ASPECT_Y;
     vp->width = size * PIXEL_CLUSTER_DIM * ASPECT_X;
-    vp->pixels = malloc(vp->height * vp->width * sizeof(uint32_t));
-    vp->buf = malloc(((vp->height * vp->width / PIXELS_PER_CLUSTER + 1) * CHARS_PER_CLUSTER + vp->height + 1) * sizeof(wchar_t));
+    vp->pixels = (uint32_t *) malloc(vp->height * vp->width * sizeof(uint32_t));
+    vp->buf = (wchar_t *) malloc(((vp->height * vp->width / PIXELS_PER_CLUSTER + 1) * CHARS_PER_CLUSTER + vp->height + 1) * sizeof(wchar_t));
     vp->fps = fps;
     vp->start = vp->total_frames = 0;
     return vp;
@@ -101,7 +99,6 @@ void vp_print_buffer(Viewport *vp, bool final_frame) {
     }
 }
 
-/* True if call is made a full frame behind. */
 bool vp_frame_await(Viewport *vp) {
     clock_t current, target;
     if (vp->start == 0) {
