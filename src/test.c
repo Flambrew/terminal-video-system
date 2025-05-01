@@ -28,7 +28,6 @@ int main() {
         vp_print_buffer(vp, k == 0);
         if (k != vp->fps * 5 - 1) {
             if (n > p) {
-                if (n < 0) printf("penis\n");
                 p = n;
             }
             s += n;
