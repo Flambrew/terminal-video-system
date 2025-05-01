@@ -25,7 +25,7 @@ static const int FG_COLOR = 30;
 static const int BG_COLOR = 40;
 static const int BR_COLOR = 60;
 static const int COLOR_RESET = 9;
-static const int PIXEL_THRESHOLD = 128;
+static const int PIXEL_THRESHOLD = 64;
 static const int COLOR_THRESHOLD = 128;
 
 static const int ASPECT_Y = 3;
@@ -47,6 +47,7 @@ typedef struct viewport {
 } Viewport;
 
 Viewport *vp_alloc(uint8_t size, uint8_t fps, uint8_t color_depth) {
+    setvbuf(stdout, NULL, _IONBF, 0);
     setlocale(LC_CTYPE, "");
 
     Viewport *vp;
@@ -68,6 +69,55 @@ void vp_free(Viewport *vp) {
     free(vp->bitmap);
     free(vp->buf);
     free(vp);
+}
+
+void vp_load_bmp(Viewport *vp, char *path) {
+    FILE *image;
+    uint8_t *data;
+    uint32_t i, j, size, offset, width, height, bytes, row, curr, *raw;
+
+    image = fopen(path, "rb");
+    if (image == NULL) {
+        printf("File not found.\n");
+    }
+
+    fseek(image, 0, SEEK_END);
+    size = ftell(image);
+    rewind(image);
+    data = (uint8_t *) malloc(size * sizeof(uint8_t));
+    fread(data, size, 1, image);
+
+    fclose(image);
+
+    if (data[0] != 'B' || data[1] != 'M') {
+        printf("Image is not a BMP.");
+    } else if (data[28] != 24) {
+        printf("Image is not in 24-bit color mode");
+    }
+
+    for (i = offset = width = height = bytes = 0; i < 4; ++i) {
+        offset += data[10 + i] << (i * 8);
+        width += data[18 + i] << (i * 8);
+        height += data[22 + i] << (i * 8);
+        bytes += data[34 + i] << (i * 8);
+    }
+
+    raw = malloc(width * height * sizeof(uint32_t));
+    row = (24 * width + 31) / 32 * 4;
+    for (i = 0; i < height; ++i) {
+        for (j = 0; j < width; ++j) {
+            curr = offset + (height - i - 1) * row + j * 3;
+            raw[i * width + j] = (data[curr + 2] << 16) + (data[curr + 1] << 8) + (data[curr]);
+            // printf("%d, %d: %d, %d, %d\n", i, j, raw[i * width + j] >> 16, (raw[i * width + j] >> 8) & 0xFF, raw[i * width + j] & 0xFF);
+        }
+    }
+
+    for (i = 0; i < width * height; ++i) {
+        vp->bitmap[i] = raw[i];
+    }
+
+    free(data);
+    free(raw);
 }
 
 void vp_update_buffer(Viewport *vp) {

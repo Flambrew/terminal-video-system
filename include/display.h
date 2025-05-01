@@ -34,6 +34,9 @@ Viewport *vp_alloc(uint8_t size, uint8_t fps, uint8_t color_depth);
 /* Free an existing instance of the video system. Performs cleanup. */
 void vp_free(Viewport *vp);
 
+/* Load and scale BMP image as current frame. */
+void vp_load_bmp(Viewport *vp, char *path);
+
 /* Update image buffer to current state of bitmap. */
 void vp_update_buffer(Viewport *vp);
 
