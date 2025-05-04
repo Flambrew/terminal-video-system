@@ -6,21 +6,6 @@
 #include <time.h>
 #include <wchar.h>
 
-#define RESOLUTION_LARGE 15
-#define RESOLUTION_MEDIUM 10
-#define RESOLUTION_SMALL 5
-#define RESOLUTION_MIN 1
-#define FPS_ULTRA 144
-#define FPS_HIGH 60
-#define FPS_MID 30
-#define FPS_LOW 15
-#define RGB256X 31
-#define RGB6X 24
-#define BW24X 23
-#define RGBL 11
-#define RGB 10
-#define BW 2
-
 static const int FG_COLOR = 30;
 static const int BG_COLOR = 40;
 static const int BR_COLOR = 60;
@@ -37,6 +22,30 @@ static const int BRAILLE_MAP[] = {0, 3, 1, 4, 2, 5, 6, 7};
 
 static const int MS_PER_SEC = 1000;
 
+typedef enum resolution {
+    RES_LARGE = 15,
+    RES_MEDIUM = 10,
+    RES_SMALL = 5,
+    RES_MIN = 1
+} Resolution;
+
+typedef enum framerate {
+    FPS_ULTRA = 144,
+    FPS_HIGH = 60,
+    FPS_MID = 30,
+    FPS_LOW = 15,
+    FPS_STEP = 1
+} Framerate;
+
+typedef enum color_mode {
+    MODE_RGB256X = 31,
+    MODE_RGB6X = 24,
+    MODE_BW24X = 23,
+    MODE_RGBL = 11,
+    MODE_RGB = 10,
+    MODE_BW = 2
+} Color_Mode;
+
 typedef struct viewport {
     uint64_t total_frames;
     uint32_t *bitmap;
@@ -46,7 +55,7 @@ typedef struct viewport {
     clock_t start;
 } Viewport;
 
-Viewport *vp_alloc(uint8_t size, uint8_t fps, uint8_t color_depth) {
+Viewport *vp_alloc(Resolution size, Framerate fps, Color_Mode mode) {
     setvbuf(stdout, NULL, _IONBF, 0);
     setlocale(LC_CTYPE, "");
 
@@ -56,7 +65,7 @@ Viewport *vp_alloc(uint8_t size, uint8_t fps, uint8_t color_depth) {
     vp->height = size * PIXEL_CLUSTER_DIM * ASPECT_Y;
     vp->width = size * PIXEL_CLUSTER_DIM * ASPECT_X;
     vp->start = vp->total_frames = 0;
-    vp->color_depth = color_depth; // value is chars per cluster
+    vp->color_depth = mode; // value is chars per cluster
     vp->fps = fps;
 
     vp->bitmap = (uint32_t *) malloc(vp->height * vp->width * sizeof(uint32_t));
@@ -146,33 +155,33 @@ void vp_update_buffer(Viewport *vp) {
 
             r /= PIXELS_PER_CLUSTER; g /= PIXELS_PER_CLUSTER; b /= PIXELS_PER_CLUSTER; 
             switch (vp->color_depth) {
-                case RGB256X:
+                case MODE_RGB256X:
                     k += swprintf(vp->buf + k, vp->color_depth, L"\e[38;2;%d;%d;%dm\e[48;5;16m%lc", r, g, b, c);
                     break;
-                case RGB6X:
+                case MODE_RGB6X:
                     color = r * 6 / 256 * 36 + g * 6 / 256 * 6 + b * 6 / 256 + 16;
                     k += swprintf(vp->buf + k, vp->color_depth, L"\e[38;5;%dm\e[48;5;16m%lc", color, c);
                     break;
-                case BW24X:
+                case MODE_BW24X:
                     color = (r + g + b) / 32 + 232;
                     k += swprintf(vp->buf + k, vp->color_depth, L"\e[38;5;%dm\e[48;5;16m%lc", color, c);
                     break;
-                case RGBL:
+                case MODE_RGBL:
                     color = ((r > COLOR_THRESHOLD) << 2) + ((g > COLOR_THRESHOLD) << 1) + (b > COLOR_THRESHOLD);
                     color += (r + g + b) / 3 > COLOR_THRESHOLD ? BR_COLOR : 0;
                     k += swprintf(vp->buf + k, vp->color_depth, L"\e[%d;%dm%lc", FG_COLOR + color, BG_COLOR, c);
                     break;
-                case RGB:
+                case MODE_RGB:
                     color = ((r > COLOR_THRESHOLD) << 2) + ((g > COLOR_THRESHOLD) << 1) + (b > COLOR_THRESHOLD);
                     k += swprintf(vp->buf + k, vp->color_depth, L"\e[%d;%dm%lc", FG_COLOR + color, BG_COLOR, c);
                     break;
-                case BW: default:
+                case MODE_BW: default:
                     k += swprintf(vp->buf + k, vp->color_depth, L"%lc", c);
                     break;
             }
         }
 
-        k += swprintf(vp->buf + k, RGB, L"\e[%d;%dm\n", FG_COLOR + COLOR_RESET, BG_COLOR + COLOR_RESET);
+        k += swprintf(vp->buf + k, MODE_RGB, L"\e[%d;%dm\n", FG_COLOR + COLOR_RESET, BG_COLOR + COLOR_RESET);
     }
 }
 

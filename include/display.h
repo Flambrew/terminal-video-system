@@ -4,20 +4,29 @@
 #include <time.h>
 #include <wchar.h>
 
-#define RESOLUTION_LARGE 15
-#define RESOLUTION_MEDIUM 10
-#define RESOLUTION_SMALL 5
-#define RESOLUTION_MIN 1
-#define FPS_ULTRA 144
-#define FPS_HIGH 60
-#define FPS_MID 30
-#define FPS_LOW 15
-#define RGB256X 31
-#define RGB6X 24
-#define BW24X 23
-#define RGBL 11
-#define RGB 10
-#define BW 2
+typedef enum resolution {
+    RES_LARGE = 15,
+    RES_MEDIUM = 10,
+    RES_SMALL = 5,
+    RES_MIN = 1
+} Resolution;
+
+typedef enum framerate {
+    FPS_ULTRA = 144,
+    FPS_HIGH = 60,
+    FPS_MID = 30,
+    FPS_LOW = 15,
+    FPS_STEP = 1
+} Framerate;
+
+typedef enum color_mode {
+    MODE_RGB256X = 31,
+    MODE_RGB6X = 24,
+    MODE_BW24X = 23,
+    MODE_RGBL = 11,
+    MODE_RGB = 10,
+    MODE_BW = 2
+} Color_Mode;
 
 typedef struct viewport {
     uint64_t total_frames;
@@ -29,7 +38,7 @@ typedef struct viewport {
 } Viewport;
 
 /* Allocate and instantiate a new instance of the video system. */
-Viewport *vp_alloc(uint8_t size, uint8_t fps, uint8_t color_depth);
+Viewport *vp_alloc(Resolution size, Framerate fps, Color_Mode mode);
 
 /* Free an existing instance of the video system. Performs cleanup. */
 void vp_free(Viewport *vp);
