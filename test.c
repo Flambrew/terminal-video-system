@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "include/display.h"
+#include "display.h"
 
 // -----=====<<<<< TESTING >>>>>=====----- //
 
@@ -23,12 +23,8 @@ int main() {
     frames = 342;//vp->fps * 5;
     framelen = 1000 / vp->fps;
     for (k = frames - 1; k >= 0; --k) {
-        //draw(vp, k);
-        char *path = "tcat/00000.bmp";
-        path[7] += (frames - k) / 100; 
-        path[8] += (frames - k) / 10 % 10; 
-        path[9] += (frames - k) % 10; 
-        vp_load_bmp(vp, path);
+        draw(vp, k);
+        //vp_load_bmp(vp, path);
         vp_update_buffer(vp);
         n = vp_frame_await(vp);
         vp_print_buffer(vp, k == 0);

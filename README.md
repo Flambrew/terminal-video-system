@@ -6,6 +6,7 @@ Current additional features:
 
 Planned features:
 - Built in frame timing logging utilities
+- Better systems for screen size definition.. perhaps separate size and aspect ratio definitions
 
 references: https://en.wikipedia.org/wiki/ANSI_escape_code
             https://en.wikipedia.org/wiki/BMP_file_format
